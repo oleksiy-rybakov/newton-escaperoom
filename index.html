@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Newton Escape Core – Interaktiver Escape Room</title>
+<style>
+:root{
+  --bg:#030712;--bg2:#071324;--panel:rgba(9,22,39,.86);--panel2:rgba(14,34,57,.82);
+  --line:rgba(255,255,255,.09);--text:#f2f8ff;--muted:#9bb0c3;--cyan:#54e5ff;
+  --blue:#5791ff;--violet:#b77cff;--green:#63f5b0;--yellow:#ffd56d;--red:#ff6f88;
+  --shadow:0 24px 80px rgba(0,0,0,.46);--radius:24px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(84,229,255,.13),transparent 28rem),
+    radial-gradient(circle at 88% 6%,rgba(183,124,255,.12),transparent 30rem),
+    radial-gradient(circle at 50% 95%,rgba(87,145,255,.09),transparent 34rem),
+    linear-gradient(145deg,var(--bg),var(--bg2) 50%,#02050b);
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.24;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 90%);
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+sub{font-size:.72em;line-height:0;vertical-align:-.28em}
+[hidden]{display:none!important}
+.app{width:min(1280px,calc(100% - 28px));margin:14px auto 54px;position:relative;z-index:1}
+.glass{background:linear-gradient(145deg,rgba(16,38,63,.9),rgba(5,15,28,.92));border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+.topbar{position:sticky;top:10px;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border-radius:20px;background:rgba(3,10,20,.82);border:1px solid var(--line);backdrop-filter:blur(20px);box-shadow:0 14px 45px rgba(0,0,0,.32)}
+.brand{display:flex;align-items:center;gap:12px;min-width:230px}.logo{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-family:Georgia,serif;font-size:1.55rem;font-weight:900;color:#021019;background:linear-gradient(135deg,var(--cyan),#bdf8ff 47%,var(--violet));box-shadow:0 0 34px rgba(84,229,255,.24)}
+.brand b{display:block;letter-spacing:.05em}.brand small{display:block;color:var(--muted);margin-top:2px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.pill{min-width:92px;padding:8px 10px;text-align:center;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.075)}.pill span{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.pill strong{font-size:.98rem}
+.icon-btn{width:40px;height:40px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.05);color:var(--text);display:grid;place-items:center;transition:.2s}.icon-btn:hover{transform:translateY(-2px);border-color:rgba(84,229,255,.35);background:rgba(84,229,255,.08)}
+.hero{margin-top:18px;padding:42px;border-radius:32px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center;min-height:590px;overflow:hidden;position:relative}
+.hero::after{content:"";position:absolute;width:420px;height:420px;border:1px solid rgba(84,229,255,.1);border-radius:50%;right:-160px;top:-160px;box-shadow:0 0 0 50px rgba(84,229,255,.018),0 0 0 100px rgba(183,124,255,.012)}
+.eyebrow{color:var(--cyan);font-size:.76rem;font-weight:900;letter-spacing:.17em;text-transform:uppercase}
+h1{font-size:clamp(2.6rem,6vw,5.7rem);line-height:.9;letter-spacing:-.065em;margin:.65rem 0 1.2rem;max-width:760px}.gradient{background:linear-gradient(90deg,var(--cyan),#e8fcff 42%,#cebaff 83%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.lead{font-size:1.08rem;line-height:1.72;color:#c6d8e7;max-width:720px}.mission-note{margin-top:18px;padding:14px 16px;border-radius:15px;background:rgba(255,213,109,.075);border:1px solid rgba(255,213,109,.22);color:#ffe7a9;line-height:1.55}
+.setup{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.field{padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.075)}label{display:block;font-weight:750;margin-bottom:7px;color:#e6f1fb}
+input[type=text],input[type=number],select{width:100%;min-height:48px;padding:11px 13px;color:white;background:#061421;border:1px solid rgba(255,255,255,.14);border-radius:12px;outline:none;transition:.2s}input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(84,229,255,.08)}
+.btnrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{min-height:48px;padding:12px 18px;border:0;border-radius:14px;font-weight:900;letter-spacing:.01em;transition:.2s}.btn:hover{transform:translateY(-2px)}.btn.primary{color:#03121a;background:linear-gradient(135deg,var(--cyan),#c5faff);box-shadow:0 14px 34px rgba(84,229,255,.18)}.btn.secondary{color:white;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11)}.btn.warn{color:#fff1c5;background:rgba(255,213,109,.09);border:1px solid rgba(255,213,109,.22)}
+.reactor-hero{min-height:430px;position:relative;border-radius:28px;background:radial-gradient(circle at 50% 46%,rgba(84,229,255,.16),transparent 30%),linear-gradient(160deg,#081a2d,#030912);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center}
+.reactor-hero canvas{position:absolute;inset:0;width:100%;height:100%}.core{position:relative;width:235px;height:235px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#dffcff 0 5%,var(--cyan) 6% 13%,rgba(84,229,255,.18) 14% 29%,rgba(4,16,28,.95) 30% 54%,transparent 55%);box-shadow:0 0 70px rgba(84,229,255,.32),inset 0 0 35px rgba(84,229,255,.3);animation:corePulse 2.7s ease-in-out infinite}.core::before,.core::after{content:"";position:absolute;inset:18px;border-radius:50%;border:2px dashed rgba(183,124,255,.75);animation:spin 11s linear infinite}.core::after{inset:-22px;border-style:solid;border-color:rgba(84,229,255,.22);border-left-color:var(--cyan);border-right-color:var(--violet);animation-duration:7s;animation-direction:reverse}.core span{font-size:4.4rem;font-family:Georgia,serif;text-shadow:0 0 22px var(--cyan)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes corePulse{50%{transform:scale(1.035);filter:brightness(1.12)}}
+.core-caption{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);text-align:center;color:var(--muted);font-size:.87rem;letter-spacing:.1em;text-transform:uppercase}
+.progress-shell{display:none;margin-top:18px;padding:16px 18px;border-radius:20px;background:rgba(5,15,28,.82);border:1px solid var(--line)}.progress-shell.show{display:block}.track{height:9px;border-radius:99px;background:rgba(255,255,255,.065);overflow:hidden}.bar{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));box-shadow:0 0 20px rgba(84,229,255,.4);transition:.45s}.progress-meta{display:flex;justify-content:space-between;gap:16px;margin-top:9px;color:var(--muted);font-size:.82rem}
+.game-shell{display:none;margin-top:18px;grid-template-columns:310px 1fr;gap:18px;align-items:start}.game-shell.show{display:grid}
+.map{position:sticky;top:88px;padding:18px;border-radius:24px}.map h3{margin:0 0 5px}.map p{margin:0 0 15px;color:var(--muted);font-size:.9rem;line-height:1.5}.sector-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sector{position:relative;min-height:67px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.035);color:#71869a;font-weight:900;transition:.2s}.sector small{display:block;font-size:.6rem;margin-top:3px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.sector.unlocked{color:#d9e8f5;border-color:rgba(84,229,255,.2)}.sector.current{color:white;background:rgba(84,229,255,.1);border-color:rgba(84,229,255,.55);box-shadow:0 0 0 3px rgba(84,229,255,.06),0 0 24px rgba(84,229,255,.1)}.sector.done{color:#042219;background:linear-gradient(145deg,#63f5b0,#b8ffdb);border-color:transparent}.sector:disabled{cursor:not-allowed;opacity:.46}.map-info{margin-top:14px;padding:14px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid var(--line)}.integrity{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.mini-track{height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}.mini-track span{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green));transition:.35s}.key-strip{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}.key-dot{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}.key-dot.on{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(84,229,255,.6)}
+.stage{min-height:760px;padding:22px;border-radius:28px;overflow:hidden;position:relative}.stage::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0,rgba(84,229,255,.09),transparent 30%)}.stage>*{position:relative;z-index:1}
+.scene{height:154px;border-radius:21px;position:relative;overflow:hidden;background:linear-gradient(180deg,#0d2841,#06111e);border:1px solid var(--line);margin-bottom:17px}.scene-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(84,229,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(84,229,255,.05) 1px,transparent 1px);background-size:32px 32px;transform:perspective(400px) rotateX(62deg) scale(1.4);transform-origin:bottom}.scene-title{position:absolute;left:18px;top:16px;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);font-weight:900}.lamp{position:absolute;right:18px;top:17px;width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 18px var(--red)}.lamp.ok{background:var(--green);box-shadow:0 0 20px var(--green)}.portal{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:120px;height:112px;border:5px solid #1d4f69;border-bottom:0;border-radius:66px 66px 0 0;background:radial-gradient(ellipse at bottom,rgba(84,229,255,.3),transparent 62%),#06121f;box-shadow:inset 0 0 35px #000,0 0 25px rgba(84,229,255,.15)}.portal::after{content:"∿";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 2.8rem Georgia;color:var(--cyan);text-shadow:0 0 20px var(--cyan)}.portal.open{animation:portalOpen .75s ease forwards}@keyframes portalOpen{50%{filter:brightness(1.8);box-shadow:0 0 70px rgba(84,229,255,.6)}100%{transform:translateX(-50%) scale(1.15);opacity:.15}}
+.task-header{padding:19px;border-radius:19px;background:rgba(255,255,255,.042);border:1px solid var(--line)}.task-header-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.badge{white-space:nowrap;padding:7px 10px;border-radius:99px;color:#cff9ff;background:rgba(84,229,255,.09);border:1px solid rgba(84,229,255,.25);font-size:.76rem;font-weight:850}.task-header h2{margin:.45rem 0 .4rem;font-size:clamp(1.45rem,2.5vw,2.1rem)}.task-header p{margin:0;color:#c1d2e0;line-height:1.6}
+.workspace{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(330px,.92fr);gap:16px;margin-top:16px}.card{padding:18px;border-radius:19px;background:rgba(1,8,16,.42);border:1px solid var(--line);box-shadow:0 16px 42px rgba(0,0,0,.2)}.card h3{margin:0 0 10px;font-size:.95rem;color:#d8e8f5}.formula{padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(84,229,255,.07),rgba(183,124,255,.07));border:1px solid rgba(84,229,255,.13);font-family:"Cambria Math",Cambria,Georgia,serif;font-size:1.45rem;text-align:center;line-height:1.55;overflow-wrap:anywhere}.prompt{margin:14px 0 0;line-height:1.65;color:#d8e5ef}.graph-card{padding:10px}.graph-card canvas{display:block;width:100%;height:330px;border-radius:14px;background:#030b14}.graph-legend{display:flex;gap:13px;flex-wrap:wrap;padding:9px 5px 1px;color:var(--muted);font-size:.78rem}.legend-line::before{content:"";display:inline-block;width:18px;height:3px;border-radius:3px;margin-right:6px;vertical-align:middle;background:var(--cyan)}.legend-line.tangent::before{background:var(--yellow)}.legend-line.iter::before{background:var(--violet)}
+.answer-panel label+input,.answer-panel label+select{margin-bottom:12px}.choice-list{display:grid;gap:9px}.choice{display:flex;align-items:flex-start;gap:10px;padding:12px 13px;border-radius:13px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.075);line-height:1.45;cursor:pointer;transition:.18s}.choice:hover{border-color:rgba(84,229,255,.3);background:rgba(84,229,255,.055)}.choice input{margin-top:4px;accent-color:var(--cyan)}
+.hint-box{margin-top:14px;border-left:4px solid var(--yellow);background:rgba(255,213,109,.07);border-radius:0 13px 13px 0}.hint-box summary{padding:13px 15px;font-weight:900;color:#ffe6a4;cursor:pointer}.hint-content{padding:0 15px 14px;color:#ffe9b2;line-height:1.55}.hint-cost{font-size:.78rem;color:#d9bc71;margin-top:5px}
+.feedback{display:none;margin-top:14px;padding:14px 15px;border-radius:14px;line-height:1.5}.feedback.show{display:block}.feedback.ok{color:#b8f8d7;background:rgba(99,245,176,.1);border:1px solid rgba(99,245,176,.28);animation:pop .4s ease}.feedback.bad{color:#ffc1cc;background:rgba(255,111,136,.1);border:1px solid rgba(255,111,136,.3);animation:shake .35s ease}.feedback.neutral{color:#d0f7ff;background:rgba(84,229,255,.08);border:1px solid rgba(84,229,255,.24)}
+@keyframes pop{50%{transform:scale(1.015)}}@keyframes shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+.actionbar{position:sticky;bottom:8px;z-index:20;display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:16px;padding:10px;border-radius:16px;background:rgba(3,10,20,.88);border:1px solid var(--line);backdrop-filter:blur(16px)}.actionbar-left{display:flex;gap:9px;flex-wrap:wrap}.attempts{color:var(--muted);font-size:.84rem}
+.transition{position:fixed;inset:0;z-index:999;display:none;place-items:center;background:radial-gradient(circle at center,rgba(12,34,58,.98),rgba(1,4,9,.995));overflow:hidden}.transition.show{display:grid;animation:fadeIn .22s ease}.transition-inner{text-align:center}.transition-ring{width:230px;height:230px;border-radius:50%;margin:auto;display:grid;place-items:center;border:3px solid rgba(84,229,255,.2);border-top-color:var(--cyan);border-bottom-color:var(--violet);animation:spin 1.3s linear infinite;box-shadow:0 0 55px rgba(84,229,255,.2)}.transition-ring span{font:700 4rem Georgia;color:white}.transition h2{margin-top:24px}.transition p{color:var(--muted)}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.end-screen{display:none;margin-top:18px;padding:50px 26px;border-radius:30px;text-align:center;overflow:hidden;position:relative}.end-screen.show{display:block}.end-icon{font-size:5rem;filter:drop-shadow(0 0 30px rgba(99,245,176,.35))}.end-screen h2{font-size:clamp(2rem,4vw,3.5rem);margin:.5rem 0}.end-screen p{color:#c6d7e4;line-height:1.65}.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:760px;margin:24px auto}.result{padding:16px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid var(--line)}.result span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.11em}.result strong{font-size:1.2rem}.certificate{max-width:760px;margin:20px auto 0;padding:22px;border-radius:20px;background:linear-gradient(135deg,rgba(99,245,176,.1),rgba(84,229,255,.08));border:1px solid rgba(99,245,176,.24)}
+.confetti{position:fixed;top:-20px;width:10px;height:16px;z-index:1200;animation:fall 3.5s linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(760deg);opacity:.2}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1050px){.hero{grid-template-columns:1fr}.game-shell.show{grid-template-columns:1fr}.map{position:relative;top:auto}.sector-grid{grid-template-columns:repeat(7,1fr)}.workspace{grid-template-columns:1fr}.graph-card canvas{height:300px}}
+@media(max-width:760px){.app{width:calc(100% - 12px);margin-top:6px}.topbar{position:relative;top:auto;align-items:flex-start;flex-direction:column}.hud{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}.pill{min-width:0}.brand small{display:none}.hero{padding:25px 18px;min-height:auto}.setup{grid-template-columns:1fr}.reactor-hero{min-height:330px}.core{width:190px;height:190px}.sector-grid{grid-template-columns:repeat(5,1fr)}.stage{padding:13px}.workspace{display:block}.workspace>.card{margin-top:12px}.graph-card canvas{height:270px}.task-header-top{display:block}.badge{display:inline-block;margin-top:10px}.actionbar{align-items:stretch;flex-direction:column}.actionbar-left,.actionbar .btn{width:100%}.actionbar-left{display:grid;grid-template-columns:1fr 1fr}.result-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){h1{font-size:2.65rem}.hud{grid-template-columns:repeat(2,1fr)}.sector-grid{grid-template-columns:repeat(4,1fr)}.graph-card canvas{height:235px}.actionbar-left{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr}.formula{font-size:1.22rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+
+
+/* --- Integriertes GeoGebra-Werkzeug --- */
+.tool-btn{width:auto;min-width:112px;padding:0 13px;gap:7px;display:flex;align-items:center;font-weight:850}
+.ggb-modal{position:fixed;inset:0;z-index:10000;display:none;place-items:center;padding:16px;background:rgba(0,4,10,.82);backdrop-filter:blur(14px)}
+.ggb-modal.show{display:grid;animation:ggbFade .22s ease both}
+.ggb-dialog{width:min(1120px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:26px;background:linear-gradient(145deg,#0e2742,#06101d);border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 100px rgba(0,0,0,.65)}
+.ggb-head{position:sticky;top:0;z-index:3;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;background:rgba(5,16,29,.94);border-bottom:1px solid rgba(255,255,255,.09);backdrop-filter:blur(18px)}
+.ggb-head h2{margin:2px 0 5px}.ggb-head p{margin:0;color:var(--muted);line-height:1.5;font-size:.9rem}
+.ggb-close{flex:0 0 auto}
+.ggb-body{padding:18px}
+.ggb-rule{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:14px 16px;margin-bottom:14px;border-radius:16px;background:rgba(255,213,109,.08);border:1px solid rgba(255,213,109,.24);color:#ffe9ae;line-height:1.55}
+.ggb-rule strong{color:#fff5d4}.ggb-actions{display:flex;gap:9px;flex-wrap:wrap}
+.ggb-frame{width:100%;height:min(570px,65vh);min-height:430px;border-radius:18px;overflow:hidden;background:white;border:1px solid rgba(255,255,255,.12)}
+#ggbElement{width:100%;height:100%}.ggb-status{padding:10px 3px 0;color:var(--muted);font-size:.83rem}
+.rounding-note{margin:12px 0 0;padding:11px 13px;border-radius:12px;background:rgba(99,245,176,.075);border:1px solid rgba(99,245,176,.2);color:#caffdf;line-height:1.5;font-size:.9rem}
+.tool-hint{margin-top:10px;color:var(--muted);font-size:.86rem;line-height:1.5}
+@keyframes ggbFade{from{opacity:0}to{opacity:1}}
+@media(max-width:760px){.tool-btn{min-width:0}.tool-btn span{display:none}.ggb-modal{padding:5px}.ggb-dialog{max-height:calc(100vh - 10px);border-radius:18px}.ggb-head{padding:14px}.ggb-body{padding:10px}.ggb-rule{grid-template-columns:1fr}.ggb-frame{height:68vh;min-height:420px}}
+
+</style>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">N</div><div><b>NEWTON ESCAPE CORE</b><small>Nullstellen · Iteration · Konvergenz</small></div></div>
+    <div class="hud">
+      <div class="pill"><span>Zeit</span><strong id="timer">30:00</strong></div>
+      <div class="pill"><span>Integrität</span><strong id="integrityHud">100 %</strong></div>
+      <div class="pill"><span>Sektor</span><strong id="counter">0 / 15</strong></div>
+      <div class="pill"><span>Team</span><strong id="teamHud">–</strong></div>
+      <button class="icon-btn tool-btn" id="ggbTopBtn" type="button" title="GeoGebra öffnen" aria-label="GeoGebra öffnen" hidden>∿ <span>GeoGebra</span></button>
+      <button class="icon-btn" id="pauseBtn" type="button" title="Timer pausieren" aria-label="Timer pausieren">Ⅱ</button>
+      <button class="icon-btn" id="soundBtn" type="button" title="Ton ein- oder ausschalten" aria-label="Ton ein- oder ausschalten">♪̸</button>
+      <button class="icon-btn" id="fullBtn" type="button" title="Vollbild" aria-label="Vollbild">⛶</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero glass" id="hero">
+      <div>
+        <div class="eyebrow">Mission 11-N · Der instabile Nullstellenkern</div>
+        <h1>Bringt den <span class="gradient">Newton-Kern</span> zurück auf null.</h1>
+        <p class="lead">Ein Fehler im Navigationssystem hat den Forschungskomplex verriegelt. Fünfzehn Kalibrierungssektoren trennen Ihr Team vom Hauptreaktor. Wenden Sie das Newton-Verfahren sicher an, erkennen Sie problematische Startwerte und stabilisieren Sie den Kern, bevor die Zeit abläuft.</p>
+        <div class="mission-note"><strong>Rundungsregel:</strong> Rechnen Sie mit ungerundeten Zwischenwerten und geben Sie Endergebnisse auf <strong>drei Nachkommastellen</strong> an. Punkt und Komma sind möglich; exakte Brüche und zusätzliche Nachkommastellen werden ebenfalls akzeptiert. Bei Rechenaufgaben, in denen Näherungswerte x<sub>k</sub> bestimmt werden, steht ein integrierter GeoGebra-Grafikrechner zur Verfügung. Ein Hinweis kostet 2 %, ein Fehlversuch 4 %.</div>
+        <div class="setup">
+          <div class="field"><label for="teamName">Teamname</label><input id="teamName" type="text" maxlength="28" placeholder="z. B. Die Nullstellenjäger"></div>
+          <div class="field"><label for="timeSelect">Zeitlimit</label><select id="timeSelect"><option value="1800" selected>30 Minuten</option><option value="2100">35 Minuten</option><option value="2400">40 Minuten</option><option value="2700">45 Minuten</option></select></div>
+        </div>
+        <div class="btnrow"><button class="btn primary" id="startBtn" type="button">Mission starten</button><button class="btn secondary" id="demoBtn" type="button">Newton-Visualisierung</button></div>
+      </div>
+      <div class="reactor-hero" aria-hidden="true"><canvas id="heroCanvas"></canvas><div class="core"><span>0</span></div><div class="core-caption">Zielwert des Reaktorkerns: f(x) = 0</div></div>
+    </section>
+
+    <section class="progress-shell" id="progressShell"><div class="track"><div class="bar" id="bar"></div></div><div class="progress-meta"><span id="progressText">0 von 15 Sektoren stabilisiert</span><span id="rootKeyText">0 / 15 Kernschlüssel</span></div></section>
+
+    <section class="game-shell" id="gameShell">
+      <aside class="map glass">
+        <h3>Sektorenplan</h3><p>Gelöste Sektoren können erneut geöffnet werden. Der nächste Sektor wird nach einer korrekten Lösung freigeschaltet.</p>
+        <div class="sector-grid" id="sectorGrid"></div>
+        <div class="map-info">
+          <div class="integrity"><strong>Systemintegrität</strong><span id="integrityMap">100 %</span></div>
+          <div class="mini-track"><span id="integrityBar"></span></div>
+          <div class="key-strip" id="keyStrip" aria-label="Gesammelte Kernschlüssel"></div>
+        </div>
+      </aside>
+
+      <section class="stage glass">
+        <div class="scene"><div class="scene-grid"></div><div class="scene-title" id="sceneTitle">Kalibrierungssektor 1</div><div class="lamp" id="lamp"></div><div class="portal" id="portal"></div></div>
+        <div class="task-header">
+          <div class="task-header-top"><div><div class="eyebrow" id="taskEyebrow">Sektor 1</div><h2 id="taskTitle"></h2></div><span class="badge" id="taskBadge"></span></div>
+          <p id="taskStory"></p>
+        </div>
+        <div class="workspace" id="workspace"></div>
+        <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+        <div class="actionbar">
+          <div class="actionbar-left"><button class="btn secondary" id="ggbTaskBtn" type="button">GeoGebra-Werkzeug</button><button class="btn warn" id="hintBtn" type="button">Hinweis entschlüsseln</button><button class="btn secondary" id="resetTaskBtn" type="button">Eingaben löschen</button></div>
+          <div class="attempts" id="attemptText">Noch kein Fehlversuch</div>
+          <button class="btn primary" id="checkBtn" type="button">Kalibrierung prüfen</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="end-screen glass" id="complete"><div class="end-icon">◉</div><div class="eyebrow">Mission erfolgreich</div><h2>Der Newton-Kern ist stabil.</h2><p id="resultLine"></p><div class="result-grid"><div class="result"><span>Restzeit</span><strong id="resultTime"></strong></div><div class="result"><span>Integrität</span><strong id="resultIntegrity"></strong></div><div class="result"><span>Fehlversuche</span><strong id="resultFails"></strong></div><div class="result"><span>Hinweise</span><strong id="resultHints"></strong></div></div><div class="certificate"><strong id="certificateTeam"></strong><br>hat alle fünfzehn Nullstellenprotokolle entschlüsselt und den Reaktorkern erfolgreich auf den Zielwert null kalibriert.</div><div class="btnrow" style="justify-content:center"><button class="btn primary" type="button" id="restartBtn">Neue Mission</button></div></section>
+    <section class="end-screen glass" id="failed"><div class="end-icon">⚠</div><div class="eyebrow" style="color:var(--red)">Systemabbruch</div><h2>Der Kern bleibt instabil.</h2><p>Die Systemintegrität ist auf null gefallen oder das Zeitlimit wurde überschritten. Starten Sie die Mission neu und wählen Sie Ihre Hinweise gezielter.</p><div class="btnrow" style="justify-content:center"><button class="btn primary" type="button" id="restartFailedBtn">Mission neu starten</button></div></section>
+  </main>
+</div>
+
+
+<div class="ggb-modal" id="ggbModal" role="dialog" aria-modal="true" aria-labelledby="ggbTitle">
+  <div class="ggb-dialog">
+    <div class="ggb-head">
+      <div><div class="eyebrow">Erlaubtes Rechenwerkzeug</div><h2 id="ggbTitle">GeoGebra-Grafikrechner</h2><p>Ohne CAS und ohne automatische Nullstellenlösung. Beim ersten Öffnen einer Aufgabe werden ausschließlich die Funktion und der Startwert vorbereitet. Eigene Eingaben bleiben beim Schließen und erneuten Öffnen derselben Aufgabe erhalten.</p></div>
+      <button class="icon-btn ggb-close" id="ggbCloseBtn" type="button" aria-label="GeoGebra schließen">✕</button>
+    </div>
+    <div class="ggb-body">
+      <div class="ggb-rule">
+        <div><strong>Verbindliche Rundung:</strong> Zwischenwerte mit voller Genauigkeit weiterverwenden; nur die Eingabe im Escape Room auf drei Nachkommastellen runden. GeoGebra zeigt sechs Nachkommastellen.</div>
+        <div class="ggb-actions"><button class="btn primary" id="ggbLoadTaskBtn" type="button">Aktuelle Aufgabe laden</button><button class="btn secondary" id="ggbClearBtn" type="button">GeoGebra leeren</button></div>
+      </div>
+      <div class="ggb-frame"><div id="ggbElement"><div style="padding:24px;color:#123">GeoGebra wird geladen …</div></div></div>
+      <div class="ggb-status" id="ggbStatus">Internetverbindung erforderlich. Der Escape Room selbst funktioniert weiterhin ohne GeoGebra.</div>
+      <div class="tool-hint"><strong>Rechentipp:</strong> Geben Sie einen Newton-Schritt direkt als Term ein, zum Beispiel <code>1.5-(1.5^2-2)/(2*1.5)</code>. Verwenden Sie das angezeigte Ergebnis unverändert für den nächsten Schritt.</div>
+    </div>
+  </div>
+</div>
+
+<div class="transition" id="transition"><div class="transition-inner"><div class="transition-ring"><span id="transitionNumber">2</span></div><h2>Nächster Sektor freigeschaltet</h2><p>Die Iteration nähert sich dem Kernziel.</p></div></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const ROOT_KEYS=["N","E","W","T","O","N","I","T","E","R","I","E","R","T","!"];
+const TASKS=[
+ {type:"choice",title:"Das Iterationsprotokoll",badge:"Grundidee",story:"Das Hauptterminal akzeptiert nur die korrekte Rechenvorschrift. Wählen Sie die Formel, mit der aus xₙ der nächste Näherungswert entsteht.",formula:"Gesucht ist die Newton-Formel.",options:["xₙ₊₁ = xₙ − f′(xₙ) / f(xₙ)","xₙ₊₁ = xₙ − f(xₙ) / f′(xₙ)","xₙ₊₁ = f(xₙ) − xₙ · f′(xₙ)","xₙ₊₁ = xₙ + f(xₙ) · f′(xₙ)"],answer:1,hint:"Die Tangente in xₙ wird bis zur x-Achse verlängert. Im Bruch steht der Funktionswert über der Ableitung.",graph:{id:"sqrt2",x0:1.8,steps:1}},
+ {type:"numeric",title:"Erster Sprung zur Wurzel",badge:"Ein Newton-Schritt",story:"Ein Kühlkanal folgt der Gleichung x² − 2 = 0. Berechnen Sie aus x₀ = 1,5 den nächsten Näherungswert.",formula:"f(x)=x²−2,  f′(x)=2x,  x₀=1,5",label:"x₁",answer:1.4166666667,tolerance:.00051,hint:"Setzen Sie x₀=1,5 in x₁=x₀−f(x₀)/f′(x₀) ein.",graph:{id:"sqrt2",x0:1.5,steps:1}},
+ {type:"pair",title:"Zwei Iterationen, ein Ziel",badge:"Iteration",story:"Die zweite Schleuse reagiert auf √5. Führen Sie ausgehend von x₀ = 2 zwei Newton-Schritte aus.",formula:"f(x)=x²−5,  f′(x)=2x,  x₀=2",labels:["x₁","x₂"],answers:[2.25,2.236111111],tolerance:.00051,hint:"Zuerst erhalten Sie x₁=2,25. Verwenden Sie anschließend x₁ als neuen Ausgangswert.",graph:{id:"sqrt5",x0:2,steps:2}},
+ {type:"numeric",title:"Kubikwurzel-Kalibrierung",badge:"Ableitung einsetzen",story:"Der Drucksensor verlangt eine Nullstelle von x³ − 7. Berechnen Sie für x₀ = 2 den Wert x₁.",formula:"f(x)=x³−7,  f′(x)=3x²,  x₀=2",label:"x₁",answer:23/12,tolerance:.00051,hint:"Es gilt f(2)=1 und f′(2)=12.",graph:{id:"cube7",x0:2,steps:1}},
+ {type:"choice",title:"Was bedeutet xₙ₊₁ geometrisch?",badge:"Geometrie",story:"Das optische Navigationssystem zeigt eine Tangente, aber die Beschriftung fehlt. Bestimmen Sie die geometrische Bedeutung des nächsten Näherungswerts.",formula:"Tangente an den Graphen im Punkt (xₙ | f(xₙ))",options:["xₙ₊₁ ist der y-Achsenabschnitt der Tangente.","xₙ₊₁ ist der Hochpunkt der Tangente.","xₙ₊₁ ist die x-Koordinate des Schnittpunkts der Tangente mit der x-Achse.","xₙ₊₁ ist immer die exakte Nullstelle von f."],answer:2,hint:"Das Newton-Verfahren ersetzt den Graphen lokal durch seine Tangente und sucht deren Nullstelle.",graph:{id:"cubic1",x0:1.5,steps:1}},
+ {type:"choice",title:"Fehler im Wartungslog",badge:"Fehleranalyse",story:"Ein Techniker berechnet für f(x)=x²−9 und x₀=4 den Wert x₁=4−7/4=2,25. Finden Sie den entscheidenden Fehler.",formula:"f(x)=x²−9,  f′(x)=2x,  x₀=4",options:["Der Funktionswert f(4) wurde falsch berechnet.","Die Ableitung wurde nicht an x₀ ausgewertet; f′(4)=8 und nicht 4.","Das Minuszeichen der Newton-Formel muss ein Pluszeichen sein.","Quadratische Funktionen dürfen nicht mit Newton behandelt werden."],answer:1,hint:"Kontrollieren Sie Zähler und Nenner getrennt: f(4)=7, aber wie groß ist f′(4)?",graph:{id:"sqrt9",x0:4,steps:1}},
+ {type:"choice",title:"Singulärer Startwert",badge:"Grenzen",story:"Der Sektor startet mit f(x)=x³−3x+1 bei x₀=1. Das System meldet DIVISION BY ZERO. Warum kann kein Newton-Schritt ausgeführt werden?",formula:"f(x)=x³−3x+1,  f′(x)=3x²−3,  x₀=1",options:["Weil f(1)=0 ist.","Weil f′(1)=0 ist und der Newton-Bruch dadurch nicht definiert ist.","Weil x₀ positiv ist.","Weil kubische Funktionen mindestens zwei Startwerte benötigen."],answer:1,hint:"Berechnen Sie die Steigung der Tangente bei x₀=1.",graph:{id:"flat",x0:1,steps:0}},
+ {type:"pair",title:"Gefangen in einer Schleife",badge:"Nichtkonvergenz",story:"Ein defekter Algorithmus verwendet f(x)=x³−2x+2 mit x₀=0. Berechnen Sie x₁ und x₂. Sie entdecken dabei einen periodischen Zyklus.",formula:"f(x)=x³−2x+2,  f′(x)=3x²−2,  x₀=0",labels:["x₁","x₂"],answers:[1,0],tolerance:.0001,hint:"Aus x₀=0 folgt x₁=1. Setzen Sie anschließend x₁=1 erneut in die Formel ein.",graph:{id:"cycle",x0:0,steps:2}},
+ {type:"choice",title:"Abbruchkriterium",badge:"Genauigkeit",story:"Zwei aufeinanderfolgende Werte lauten xₙ=1,4142135624 und xₙ₊₁=1,41421356237. Das System fordert eine Genauigkeit von 10⁻⁸. Darf die Iteration beendet werden?",formula:"Abbruch, falls |xₙ₊₁−xₙ| < 10⁻⁸",options:["Ja, denn die Differenz beträgt 3·10⁻¹¹.","Nein, denn beide Zahlen besitzen mehr als acht Nachkommastellen.","Nein, denn nur f(xₙ)=0 erlaubt einen Abbruch.","Ja, aber nur weil √2 eine rationale Zahl ist."],answer:0,hint:"Subtrahieren Sie die beiden Näherungswerte und vergleichen Sie den Betrag mit 0,00000001.",graph:{id:"sqrt2",x0:1.42,steps:2}},
+ {type:"numeric",title:"Der plastische Zahlenkern",badge:"Anwendung",story:"Ein Materialmodell führt auf x³−x−1=0. Das Terminal startet mit x₀=1,3. Berechnen Sie x₁ auf mindestens drei Nachkommastellen.",formula:"f(x)=x³−x−1,  f′(x)=3x²−1,  x₀=1,3",label:"x₁",answer:1.3253071253,tolerance:.00051,hint:"Es gilt f(1,3)=−0,103 und f′(1,3)=4,07.",graph:{id:"plastic",x0:1.3,steps:1}},
+ {type:"choice",title:"Startwert auswählen",badge:"Strategie",story:"Der Scanner zeigt den Graphen von f(x)=x³−4x−1. Gesucht ist die positive Nullstelle bei ungefähr x≈2,1. Welcher angebotene Startwert liegt am nächsten und ist daher die naheliegendste Wahl?",formula:"Wählen Sie einen geeigneten Startwert.",options:["x₀=−2","x₀=0","x₀=2,2","x₀=5"],answer:2,hint:"Orientieren Sie sich am Graphen und wählen Sie einen Startwert nahe der gesuchten positiven Nullstelle.",graph:{id:"threeRoots",x0:2.2,steps:0,mode:"startChoice",showCoordinates:true,candidates:[-2,0,2.2,5]}},
+ {type:"triple",title:"Präzisionssequenz √3",badge:"Mehrfachiteration",story:"Das Steuergerät akzeptiert erst drei aufeinanderfolgende Näherungen. Bestimmen Sie für x²−3=0 aus x₀=2 die Werte x₁, x₂ und x₃.",formula:"xₙ₊₁ = ½(xₙ + 3/xₙ)",labels:["x₁","x₂","x₃"],answers:[1.75,1.7321428571,1.7320508100],tolerance:.00051,hint:"Nutzen Sie die vereinfachte Newton-Formel. Jeder neue Wert wird in die nächste Zeile übernommen.",graph:{id:"sqrt3",x0:2,steps:3}},
+ {type:"choice",title:"Konvergenz ist kein Automatismus",badge:"Beurteilung",story:"Vor dem Hauptreaktor erscheint eine Sicherheitsbehauptung: Bei jeder differenzierbaren Funktion führt jeder Startwert sicher zu einer Nullstelle. Bewerten Sie diese Aussage.",formula:"Aussage zur Konvergenz des Newton-Verfahrens",options:["Die Aussage ist richtig.","Die Aussage ist falsch: Das Verfahren kann scheitern, divergieren oder in Zyklen geraten.","Die Aussage gilt nur für kubische Funktionen.","Die Aussage gilt genau dann, wenn x₀=0 ist."],answer:1,hint:"Denken Sie an waagrechte Tangenten und an den bereits entdeckten Zweierzyklus.",graph:{id:"cycle",x0:0,steps:2}},
+ {type:"triple",title:"Kubikwurzel-Kernstabilisierung",badge:"Mehrfachiteration",story:"Der Hauptreaktor arbeitet mit f(x)=x³−2. Starten Sie bei x₀=1,5 und berechnen Sie x₁, x₂ sowie die Nullstelle nach dem dritten Schritt. Erst dann erreicht der Kern den Zielwert null.",formula:"f(x)=x³−2,  f′(x)=3x²,  x₀=1,5",labels:["x₁","x₂","x₃ ≈ ³√2"],answers:[1.2962962963,1.2609322247,1.2599218606],tolerance:.00051,hint:"Führen Sie die Newton-Formel dreimal aus. Nach dem dritten Schritt sollte x≈1,259922 gelten.",graph:{id:"cube2",x0:1.5,steps:3}},
+ {type:"pair",title:"Finaler Schnittpunktcode",badge:"Transfer",story:"Formen Sie die Gleichung x²=3−x als Nullstellenproblem um. Geben Sie die Funktion f(x) an, für die f(x)=0 gelten soll, und führen Sie ausgehend von x₀=1,5 zwei Newton-Schritte aus.",formula:"x²=3−x,  x₀=1,5",prompt:"Geben Sie zuerst die Funktion f(x) und anschließend die Näherungswerte x₁ und x₂ an.",functionAnswer:true,functionLabel:"f(x)",labels:["x₁","x₂"],answers:[1.3125,1.3028017241],tolerance:.00051,hint:"Bringen Sie zunächst alle Terme auf eine Seite. Eine mögliche Funktion lautet f(x)=x²+x−3. Im ersten Newton-Schritt ergibt sich x₁=1,3125.",graph:{id:"intersection",x0:1.5,steps:2}}
+];
+const FUNCTIONS={
+ sqrt2:{f:x=>x*x-2,df:x=>2*x,xmin:-.2,xmax:2.6,ymin:-2.5,ymax:4.2},
+ sqrt5:{f:x=>x*x-5,df:x=>2*x,xmin:-.2,xmax:3.2,ymin:-5.5,ymax:5.2},
+ cube7:{f:x=>x*x*x-7,df:x=>3*x*x,xmin:-.2,xmax:2.8,ymin:-8,ymax:10},
+ cubic1:{f:x=>x*x*x-x-1,df:x=>3*x*x-1,xmin:-2,xmax:2.2,ymin:-4,ymax:5},
+ sqrt9:{f:x=>x*x-9,df:x=>2*x,xmin:-.5,xmax:5,ymin:-10,ymax:15},
+ flat:{f:x=>x*x*x-3*x+1,df:x=>3*x*x-3,xmin:-2.3,xmax:2.3,ymin:-4,ymax:5},
+ cycle:{f:x=>x*x*x-2*x+2,df:x=>3*x*x-2,xmin:-2.3,xmax:2.2,ymin:-3,ymax:7},
+ plastic:{f:x=>x*x*x-x-1,df:x=>3*x*x-1,xmin:-1.6,xmax:2.1,ymin:-4,ymax:4},
+ threeRoots:{f:x=>x*x*x-4*x-1,df:x=>3*x*x-4,xmin:-3,xmax:3,ymin:-8,ymax:8},
+ sqrt3:{f:x=>x*x-3,df:x=>2*x,xmin:-.2,xmax:2.8,ymin:-3.5,ymax:4.5},
+ cube2:{f:x=>x*x*x-2,df:x=>3*x*x,xmin:-.2,xmax:2.1,ymin:-2.5,ymax:7},
+ intersection:{f:x=>x*x+x-3,df:x=>2*x+1,xmin:-2.7,xmax:2.3,ymin:-4,ymax:6}
+};
+const state={index:0,maxUnlocked:0,completed:new Set(),attempts:{},hints:new Set(),integrity:100,fails:0,seconds:1800,totalSeconds:1800,team:"",timer:null,running:false,paused:false,sound:false,transitioning:false};
+
+const GGB_EXPRESSIONS={
+ sqrt2:"x^2-2",sqrt5:"x^2-5",cube7:"x^3-7",cubic1:"x^3-x-1",sqrt9:"x^2-9",
+ flat:"x^3-3x+1",cycle:"x^3-2x+2",plastic:"x^3-x-1",threeRoots:"x^3-4x-1",
+ sqrt3:"x^2-3",cube2:"x^3-2",intersection:"x^2-(3-x)"
+};
+let ggbApi=null,ggbStarted=false,ggbLoadedTaskIndex=null,ggbPendingTaskIndex=null;
+function initGeoGebra(){
+ if(ggbStarted)return;ggbStarted=true;
+ const status=$("ggbStatus");
+ if(typeof GGBApplet==="undefined"){
+  status.textContent="GeoGebra konnte nicht geladen werden. Prüfen Sie die Internetverbindung oder öffnen Sie die Datei in einem aktuellen Browser.";
+  $("ggbElement").innerHTML='<div style="padding:28px;color:#7a1b2b;background:#fff">GeoGebra ist momentan nicht erreichbar.</div>';
+  return;
+ }
+ const params={
+  appName:"graphing",width:980,height:570,scaleContainerClass:"ggb-frame",autoHeight:false,allowUpscale:true,
+  showToolBar:false,showMenuBar:false,showAlgebraInput:true,algebraInputPosition:"algebra",showResetIcon:true,
+  showZoomButtons:true,showSuggestionButtons:false,showStartTooltip:false,enableRightClick:false,enableLabelDrags:false,
+  enableShiftDragZoom:true,enableFileFeatures:false,enableCAS:false,language:"de",country:"DE",rounding:"6",
+  preventFocus:true,errorDialogsActive:true,appletOnLoad(api){
+   ggbApi=api;
+   status.textContent="GeoGebra ist bereit.";
+   if(ggbPendingTaskIndex!==null){
+    const target=ggbPendingTaskIndex;
+    ggbPendingTaskIndex=null;
+    loadTaskIntoGgb(target,true);
+   }
+  }
+ };
+ new GGBApplet(params,true).inject("ggbElement");
+}
+function openGeoGebra(){
+ if(!isGeoGebraTask(TASKS[state.index]))return;
+ $("ggbModal").classList.add("show");document.body.style.overflow="hidden";
+ if(!ggbApi){ggbPendingTaskIndex=state.index;initGeoGebra();return;}
+ if(ggbLoadedTaskIndex!==state.index)loadTaskIntoGgb(state.index,true);
+}
+function closeGeoGebra(){$("ggbModal").classList.remove("show");document.body.style.overflow="";}
+function clearGeoGebra(){
+ if(!ggbApi){$("ggbStatus").textContent="GeoGebra wird noch geladen.";return;}
+ try{ggbApi.reset();ggbLoadedTaskIndex=state.index;$("ggbStatus").textContent="GeoGebra wurde vollständig geleert. Beim Schließen und erneuten Öffnen dieser Aufgabe bleibt die Zeichenfläche leer.";}
+ catch(e){$("ggbStatus").textContent="Das Werkzeug konnte nicht zurückgesetzt werden.";}
+}
+function loadTaskIntoGgb(index,automatic=false){
+ if(!ggbApi){ggbPendingTaskIndex=index;$("ggbStatus").textContent="GeoGebra wird noch geladen. Die aktuelle Aufgabe wird anschließend automatisch vorbereitet.";return;}
+ const t=TASKS[index]||TASKS[0];
+ if(!isGeoGebraTask(t)){ $("ggbStatus").textContent="Dieses Werkzeug ist nur bei Aufgaben zur Berechnung von Näherungswerten verfügbar."; return; }
+ const expr=GGB_EXPRESSIONS[t.graph.id],x0=Number(t.graph.x0);
+ try{
+  ggbApi.reset();
+  ggbApi.evalCommand(`f(x)=${expr}`);
+  if(Number.isFinite(x0))ggbApi.evalCommand(`x_0=${x0}`);
+  ggbLoadedTaskIndex=index;
+  const prefix=automatic?"Automatisch geladen":"Geladen";
+  $("ggbStatus").innerHTML=`${prefix} – Sektor ${index+1}: Nur f(x)=${expr} und x<sub>0</sub>=${String(x0).replace('.',',')} wurden vorbereitet. Eigene Konstruktionen bleiben beim Schließen und erneuten Öffnen dieser Aufgabe erhalten.`;
+ }catch(e){$("ggbStatus").textContent="Die aktuelle Aufgabe konnte nicht automatisch geladen werden. Funktion und Startwert können weiterhin manuell eingegeben werden.";}
+}
+function loadCurrentTaskIntoGgb(){loadTaskIntoGgb(state.index,false)}
+
+function mathHtml(value){
+ return String(value)
+  .replaceAll("xₙ₊₁","x<sub>n+1</sub>")
+  .replaceAll("xₙ","x<sub>n</sub>")
+  .replaceAll("x₀","x<sub>0</sub>")
+  .replaceAll("x₁","x<sub>1</sub>")
+  .replaceAll("x₂","x<sub>2</sub>")
+  .replaceAll("x₃","x<sub>3</sub>");
+}
+function isGeoGebraTask(t){return Boolean(t)&&["numeric","pair","triple"].includes(t.type)}
+function parseNum(v){const s=String(v).trim().replace(/,/g,".");if(s==="")return NaN;if(/^[-+]?\d+(\.\d+)?\/[-+]?\d+(\.\d+)?$/.test(s)){const [a,b]=s.split("/").map(Number);return b!==0?a/b:NaN}const n=Number(s);return Number.isFinite(n)?n:NaN}
+function near(a,b,t=.001){return Number.isFinite(a)&&Math.abs(a-b)<=t}
+function fmtTime(sec){return `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`}
+function beep(freq=520,duration=.08){if(!state.sound)return;try{const C=window.AudioContext||window.webkitAudioContext;const ctx=new C(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=freq;gain.gain.setValueAtTime(.05,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+duration)}catch(e){}}
+function heroAnimation(){const c=$("heroCanvas"),ctx=c.getContext("2d");let t=0;function resize(){const r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);c.width=r.width*d;c.height=r.height*d;ctx.setTransform(d,0,0,d,0,0)}resize();addEventListener("resize",resize);function frame(){const w=c.clientWidth,h=c.clientHeight;ctx.clearRect(0,0,w,h);ctx.strokeStyle="rgba(84,229,255,.16)";ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<=120;i++){const x=i/120*w;const y=h*.55-Math.sin(i/16+t)*34-Math.cos(i/29-t*.7)*18;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke();for(let i=0;i<18;i++){const a=t*.7+i*Math.PI*2/18;const r=125+20*Math.sin(t+i);const x=w/2+Math.cos(a)*r,y=h/2+Math.sin(a)*r*.5;ctx.fillStyle=`rgba(183,124,255,${.16+.12*Math.sin(t+i)})`;ctx.beginPath();ctx.arc(x,y,2.3,0,Math.PI*2);ctx.fill()}t+=.015;requestAnimationFrame(frame)}frame()}
+function renderMap(){
+ $("sectorGrid").innerHTML=TASKS.map((t,i)=>{let cls=i<=state.maxUnlocked?"unlocked":"";let txt=i<=state.maxUnlocked?"bereit":"gesperrt";if(state.completed.has(i)){cls="done";txt="stabil"}if(i===state.index)cls+=" current";return `<button class="sector ${cls}" data-i="${i}" ${i>state.maxUnlocked?"disabled":""}>${String(i+1).padStart(2,"0")}<small>${txt}</small></button>`}).join("");
+ document.querySelectorAll(".sector").forEach(b=>b.addEventListener("click",()=>{const i=Number(b.dataset.i);if(i<=state.maxUnlocked&&!state.transitioning){state.index=i;renderTask()}}));
+ $("keyStrip").innerHTML=TASKS.map((_,i)=>`<span class="key-dot ${state.completed.has(i)?"on":""}" title="${state.completed.has(i)?ROOT_KEYS[i]:"Kernschlüssel gesperrt"}"></span>`).join("");
+}
+function updateHUD(){
+ $("timer").textContent=fmtTime(state.seconds);$("integrityHud").textContent=state.integrity+" %";$("integrityMap").textContent=state.integrity+" %";$("counter").textContent=`${Math.min(state.index+1,TASKS.length)} / ${TASKS.length}`;$("teamHud").textContent=state.team||"–";$("bar").style.width=`${state.completed.size/TASKS.length*100}%`;$("progressText").textContent=`${state.completed.size} von ${TASKS.length} Sektoren stabilisiert`;$("rootKeyText").textContent=`${state.completed.size} / ${TASKS.length} Kernschlüssel`;$("integrityBar").style.width=state.integrity+"%";$("pauseBtn").textContent=state.paused?"▶":"Ⅱ";renderMap();
+}
+function answerMarkup(t){
+ if(t.type==="choice")return `<div class="choice-list">${t.options.map((o,i)=>`<label class="choice"><input type="radio" name="answer" value="${i}"><span>${mathHtml(o)}</span></label>`).join("")}</div>`;
+ const functionInput=t.functionAnswer?`<label for="ansFunction">${mathHtml(t.functionLabel||"f(x)")}</label><input id="ansFunction" type="text" inputmode="text" autocomplete="off">`:"";
+ const inputs=(t.labels||[t.label]).map((label,i)=>`<label for="ans${i}">${mathHtml(label)}</label><input id="ans${i}" type="text" inputmode="decimal" autocomplete="off">`).join("");
+ return `<div>${functionInput}${inputs}</div>`;
+}
+function taskGraphMarkup(t){
+ const legend=t.graph.mode==="startChoice"
+  ? '<span class="legend-line">Graph von f</span><span class="legend-line iter">angebotene Startwerte</span>'
+  : '<span class="legend-line">Graph von f</span><span class="legend-line tangent">Tangente</span><span class="legend-line iter">Iterationssprung</span>';
+ return `<div class="card graph-card"><canvas id="graphCanvas" aria-label="Koordinatensystem mit Graph"></canvas><div class="graph-legend">${legend}</div></div>`
+}
+function renderTask(){
+ const t=TASKS[state.index],ggbAllowed=isGeoGebraTask(t);$("feedback").className="feedback";$("feedback").textContent="";$("taskEyebrow").textContent=`Sektor ${state.index+1} · Kernschlüssel ${ROOT_KEYS[state.index]}`;$("taskTitle").innerHTML=mathHtml(t.title);$("taskBadge").textContent=t.badge;$("taskStory").innerHTML=mathHtml(t.story);$("sceneTitle").textContent=`Kalibrierungssektor ${String(state.index+1).padStart(2,"0")}`;$("lamp").classList.toggle("ok",state.completed.has(state.index));$("portal").classList.remove("open");
+ $("ggbTaskBtn").hidden=!ggbAllowed;$("ggbTopBtn").hidden=!ggbAllowed;
+ const prompt=t.prompt||(t.type==="choice"?"Wählen Sie die richtige Antwort.":"Tragen Sie die gesuchten Näherungswerte ein.");
+ $("workspace").innerHTML=`${taskGraphMarkup(t)}<div class="card answer-panel"><h3>Protokoll</h3><div class="formula">${mathHtml(t.formula)}</div><p class="prompt">${mathHtml(prompt)}</p>${t.type!=="choice"?`<div class="rounding-note"><strong>Rundung:</strong> Zwischenwerte nicht runden; Endergebnisse auf drei Nachkommastellen. Mehr Stellen oder exakte Brüche sind ebenfalls erlaubt.</div>`:""}${answerMarkup(t)}<div class="hint-box" id="hintBox" hidden><div class="hint-content" style="padding-top:14px">${mathHtml(t.hint)}<div class="hint-cost">Hinweis bereits entschlüsselt</div></div></div></div>`;
+ $("attemptText").textContent=(state.attempts[state.index]||0)===0?"Noch kein Fehlversuch":`${state.attempts[state.index]} Fehlversuch${state.attempts[state.index]===1?"":"e"}`;
+ $("hintBtn").disabled=state.hints.has(state.index);$("hintBtn").textContent=state.hints.has(state.index)?"Hinweis geöffnet":"Hinweis entschlüsseln";if(state.hints.has(state.index))$("hintBox").hidden=false;
+ document.querySelectorAll("input").forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter")checkAnswer()}));
+ requestAnimationFrame(()=>drawGraph(t));updateHUD();
+}
+function drawGraph(t){
+ const c=$("graphCanvas");if(!c)return;const cfg=FUNCTIONS[t.graph.id],ctx=c.getContext("2d"),rect=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);c.width=rect.width*d;c.height=rect.height*d;ctx.setTransform(d,0,0,d,0,0);const w=rect.width,h=rect.height,p=26;const sx=x=>p+(x-cfg.xmin)/(cfg.xmax-cfg.xmin)*(w-2*p),sy=y=>h-p-(y-cfg.ymin)/(cfg.ymax-cfg.ymin)*(h-2*p);ctx.clearRect(0,0,w,h);
+ const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,"#071a2b");grad.addColorStop(1,"#020811");ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+ ctx.lineWidth=1;ctx.strokeStyle="rgba(255,255,255,.055)";for(let i=0;i<=10;i++){const x=p+i*(w-2*p)/10;ctx.beginPath();ctx.moveTo(x,p);ctx.lineTo(x,h-p);ctx.stroke()}for(let i=0;i<=8;i++){const y=p+i*(h-2*p)/8;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(w-p,y);ctx.stroke()}
+ ctx.strokeStyle="rgba(255,255,255,.42)";ctx.lineWidth=1.5;if(cfg.ymin<=0&&cfg.ymax>=0){ctx.beginPath();ctx.moveTo(p,sy(0));ctx.lineTo(w-p,sy(0));ctx.stroke()}if(cfg.xmin<=0&&cfg.xmax>=0){ctx.beginPath();ctx.moveTo(sx(0),p);ctx.lineTo(sx(0),h-p);ctx.stroke()}
+ if(t.graph.showCoordinates){
+  ctx.fillStyle="rgba(232,248,255,.78)";ctx.strokeStyle="rgba(255,255,255,.35)";ctx.lineWidth=1;ctx.font="11px system-ui";ctx.textAlign="center";ctx.textBaseline="top";
+  for(let xv=Math.ceil(cfg.xmin);xv<=Math.floor(cfg.xmax);xv++){const X=sx(xv);ctx.beginPath();ctx.moveTo(X,sy(0)-4);ctx.lineTo(X,sy(0)+4);ctx.stroke();ctx.fillText(String(xv).replace("-","−"),X,sy(0)+7)}
+  ctx.textAlign="right";ctx.textBaseline="middle";for(let yv=Math.ceil(cfg.ymin/2)*2;yv<=Math.floor(cfg.ymax/2)*2;yv+=2){if(yv===0)continue;const Y=sy(yv);ctx.beginPath();ctx.moveTo(sx(0)-4,Y);ctx.lineTo(sx(0)+4,Y);ctx.stroke();ctx.fillText(String(yv).replace("-","−"),sx(0)-7,Y)}
+  ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.font="bold 13px system-ui";ctx.fillText("x",w-p-5,sy(0)-8);ctx.fillText("y",sx(0)+8,p+13);
+ }
+ ctx.strokeStyle="#54e5ff";ctx.lineWidth=3;ctx.shadowColor="rgba(84,229,255,.55)";ctx.shadowBlur=10;ctx.beginPath();let started=false;for(let i=0;i<=500;i++){const x=cfg.xmin+(cfg.xmax-cfg.xmin)*i/500,y=cfg.f(x);if(y<cfg.ymin*2||y>cfg.ymax*2||!Number.isFinite(y)){started=false;continue}const X=sx(x),Y=sy(y);if(!started){ctx.moveTo(X,Y);started=true}else ctx.lineTo(X,Y)}ctx.stroke();ctx.shadowBlur=0;
+ if(t.graph.mode==="startChoice"){
+  const candidates=t.graph.candidates||[];ctx.textAlign="center";ctx.textBaseline="bottom";
+  candidates.forEach(value=>{if(value>=cfg.xmin&&value<=cfg.xmax){const X=sx(value),Y=sy(0);ctx.fillStyle="#b77cff";ctx.beginPath();ctx.arc(X,Y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#eaf8ff";ctx.font="12px system-ui";ctx.fillText(String(value).replace("-","−").replace(".",","),X,Y-8)}});
+  if(candidates.some(value=>value>cfg.xmax)){ctx.fillStyle="rgba(232,248,255,.78)";ctx.font="12px system-ui";ctx.textAlign="right";ctx.fillText("Startwert 5 liegt rechts außerhalb des Ausschnitts →",w-p, p+18)}
+  return;
+ }
+ function drawIndexedX(index,X,Y){ctx.fillStyle="#eaf8ff";ctx.textAlign="left";ctx.textBaseline="alphabetic";ctx.font="12px system-ui";ctx.fillText("x",X,Y);const xWidth=ctx.measureText("x").width;ctx.font="9px system-ui";ctx.fillText(String(index),X+xWidth,Y+3)}
+ let x=t.graph.x0;const points=[x];for(let k=0;k<t.graph.steps;k++){const den=cfg.df(x);if(Math.abs(den)<1e-10)break;const y=cfg.f(x),next=x-y/den;ctx.strokeStyle="#ffd56d";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx(cfg.xmin),sy(y+den*(cfg.xmin-x)));ctx.lineTo(sx(cfg.xmax),sy(y+den*(cfg.xmax-x)));ctx.stroke();ctx.strokeStyle="#b77cff";ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(sx(x),sy(y));ctx.lineTo(sx(x),sy(0));ctx.lineTo(sx(next),sy(0));ctx.stroke();ctx.setLineDash([]);points.push(next);x=next}
+ points.forEach((px,i)=>{const py=i===0?cfg.f(px):0;ctx.fillStyle=i===0?"#ffd56d":"#b77cff";ctx.beginPath();ctx.arc(sx(px),sy(py),5.5,0,Math.PI*2);ctx.fill();drawIndexedX(i,sx(px)+7,sy(py)-7)});
+}
+function readAnswer(t){
+ if(t.type==="choice"){const v=document.querySelector('input[name="answer"]:checked');return v?Number(v.value):null}
+ const n=(t.labels||[t.label]).length,values=Array.from({length:n},(_,i)=>parseNum($("ans"+i).value));
+ return t.functionAnswer?{functionText:$("ansFunction").value,values}:values;
+}
+function normalizeFunctionInput(value){
+ let s=String(value).trim().toLowerCase().replaceAll("−","-").replaceAll("²","^2").replaceAll("³","^3").replaceAll("·","*").replaceAll("×","*").replace(/\s+/g,"");
+ s=s.replace(/^f\(x\)=/,"").replace(/^f=/,"").replace(/=0$/,"");
+ return s;
+}
+function functionMatchesIntersection(value){
+ const expr=normalizeFunctionInput(value);
+ if(!expr||!/^[0-9x+\-*/^().]+$/.test(expr))return false;
+ try{
+  const js=expr.replaceAll("^","**"),fn=new Function("x",`return (${js});`),tests=[-2,-.5,0,1,3];
+  const target=tests.map(x=>x*x+x-3),values=tests.map(x=>Number(fn(x)));
+  if(values.some(y=>!Number.isFinite(y)))return false;
+  const scale=values[0]/target[0];
+  return Number.isFinite(scale)&&Math.abs(scale)>1e-12&&values.every((y,i)=>Math.abs(y-scale*target[i])<1e-8);
+ }catch(e){return false}
+}
+function answerIsComplete(t,a){
+ if(t.type==="choice")return a!==null;
+ if(t.functionAnswer)return a.functionText.trim()!==""&&a.values.every(Number.isFinite);
+ return a.every(Number.isFinite)
+}
+function answerCorrect(t,a){
+ if(t.type==="choice")return a===t.answer;
+ const values=t.functionAnswer?a.values:a,expected=t.answers||[t.answer],tol=t.tolerance||.001;
+ const numbersCorrect=expected.every((v,i)=>near(values[i],v,tol));
+ return t.functionAnswer?functionMatchesIntersection(a.functionText)&&numbersCorrect:numbersCorrect;
+}
+function checkAnswer(){
+ if(state.transitioning||!state.running||state.paused)return;const t=TASKS[state.index],a=readAnswer(t);if(!answerIsComplete(t,a)){showFeedback("neutral","Ihre Lösung ist noch unvollständig. Bitte ergänzen Sie alle erforderlichen Angaben.");return}
+ if(answerCorrect(t,a)){state.transitioning=true;beep(760,.12);showFeedback("ok",`Kalibrierung korrekt. Kernschlüssel ${ROOT_KEYS[state.index]} wurde gesichert.`);state.completed.add(state.index);$("lamp").classList.add("ok");$("portal").classList.add("open");if(state.index===state.maxUnlocked&&state.maxUnlocked<TASKS.length-1)state.maxUnlocked++;updateHUD();setTimeout(()=>advance(),850)}else{beep(170,.18);state.fails++;state.attempts[state.index]=(state.attempts[state.index]||0)+1;state.integrity=Math.max(0,state.integrity-4);$("attemptText").textContent=`${state.attempts[state.index]} Fehlversuch${state.attempts[state.index]===1?"":"e"}`;showFeedback("bad",state.attempts[state.index]>=2?`Noch nicht korrekt. Zusatzimpuls: ${t.hint}`:"Die Werte stimmen noch nicht. Rechnen Sie mit ungerundeten Zwischenwerten und runden Sie erst die Eingabe auf drei Nachkommastellen.");updateHUD();if(state.integrity<=0)setTimeout(failMission,450)}
+}
+function showFeedback(kind,text){const f=$("feedback");f.className=`feedback show ${kind}`;f.textContent=text}
+function advance(){
+ if(state.completed.size===TASKS.length){finishMission();return}const next=Math.min(state.index+1,state.maxUnlocked);state.transitioning=true;$("transitionNumber").textContent=String(next+1).padStart(2,"0");$("transition").classList.add("show");setTimeout(()=>{state.index=next;$("transition").classList.remove("show");state.transitioning=false;renderTask();window.scrollTo({top:0,behavior:"smooth"})},1200)
+}
+function useHint(){if(state.hints.has(state.index)||!state.running||state.paused)return;state.hints.add(state.index);state.integrity=Math.max(0,state.integrity-2);$("hintBox").hidden=false;$("hintBtn").disabled=true;$("hintBtn").textContent="Hinweis geöffnet";showFeedback("neutral","Hinweis entschlüsselt. Die Systemintegrität sinkt um 2 %.");updateHUD();if(state.integrity<=0)setTimeout(failMission,450)}
+function resetInputs(){document.querySelectorAll('#workspace input[type="text"],#workspace input[type="number"]').forEach(i=>i.value="");document.querySelectorAll('#workspace input[type="radio"]').forEach(i=>i.checked=false);$("feedback").className="feedback"}
+function startMission(){state.team=$("teamName").value.trim()||"Team Newton";state.seconds=Number($("timeSelect").value);state.totalSeconds=state.seconds;state.running=true;state.paused=false;$("hero").style.display="none";$("progressShell").classList.add("show");$("gameShell").classList.add("show");clearInterval(state.timer);state.timer=setInterval(()=>{if(state.running&&!state.paused){state.seconds--;updateHUD();if(state.seconds<=0)failMission()}},1000);renderTask();window.scrollTo({top:0,behavior:"smooth"})}
+function failMission(){if(!state.running)return;state.running=false;$("ggbTopBtn").hidden=true;closeGeoGebra();clearInterval(state.timer);$("gameShell").classList.remove("show");$("progressShell").classList.remove("show");$("failed").classList.add("show");window.scrollTo({top:0,behavior:"smooth"})}
+function finishMission(){state.running=false;$("ggbTopBtn").hidden=true;closeGeoGebra();clearInterval(state.timer);$("gameShell").classList.remove("show");$("complete").classList.add("show");$("resultLine").textContent=`${state.team} hat den Kern mit dem Schlüssel ${ROOT_KEYS.join("")} stabilisiert.`;$("resultTime").textContent=fmtTime(state.seconds);$("resultIntegrity").textContent=state.integrity+" %";$("resultFails").textContent=state.fails;$("resultHints").textContent=state.hints.size;$("certificateTeam").textContent=state.team;$("bar").style.width="100%";confetti();window.scrollTo({top:0,behavior:"smooth"})}
+function confetti(){const colors=["#54e5ff","#b77cff","#63f5b0","#ffd56d","#5791ff"];for(let i=0;i<70;i++){const e=document.createElement("span");e.className="confetti";e.style.left=Math.random()*100+"vw";e.style.background=colors[i%colors.length];e.style.animationDelay=Math.random()*.7+"s";e.style.animationDuration=2.6+Math.random()*2+"s";document.body.appendChild(e);setTimeout(()=>e.remove(),5200)}}
+function demoNewton(){const old=$("demoBtn").textContent;$("demoBtn").textContent="Tangente → x-Achse → neuer Startwert";setTimeout(()=>$("demoBtn").textContent=old,3200)}
+$("startBtn").addEventListener("click",startMission);$("checkBtn").addEventListener("click",checkAnswer);$("hintBtn").addEventListener("click",useHint);$("resetTaskBtn").addEventListener("click",resetInputs);$("demoBtn").addEventListener("click",demoNewton);$("restartBtn").addEventListener("click",()=>location.reload());$("restartFailedBtn").addEventListener("click",()=>location.reload());
+$("ggbTopBtn").addEventListener("click",openGeoGebra);$("ggbTaskBtn").addEventListener("click",openGeoGebra);$("ggbCloseBtn").addEventListener("click",closeGeoGebra);$("ggbLoadTaskBtn").addEventListener("click",loadCurrentTaskIntoGgb);$("ggbClearBtn").addEventListener("click",clearGeoGebra);$("ggbModal").addEventListener("click",e=>{if(e.target===$("ggbModal"))closeGeoGebra()});addEventListener("keydown",e=>{if(e.key==="Escape"&&$("ggbModal").classList.contains("show"))closeGeoGebra()});
+$("pauseBtn").addEventListener("click",()=>{if(!state.running)return;state.paused=!state.paused;updateHUD();showFeedback("neutral",state.paused?"Mission pausiert. Der Timer steht.":"Mission fortgesetzt.")});
+$("soundBtn").addEventListener("click",()=>{state.sound=!state.sound;$("soundBtn").textContent=state.sound?"♪":"♪̸";beep(600,.08)});
+$("fullBtn").addEventListener("click",()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()});
+addEventListener("resize",()=>{if(state.running)drawGraph(TASKS[state.index])});
+heroAnimation();updateHUD();
+</script>
+</body>
+</html>
