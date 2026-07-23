@@ -2347,6 +2347,55 @@ setCinematicShot=function(shot,speaker){
   if(speaker)finalSetHumanAvatar(speaker);
 }
 
+function primeCinematicFirstFrame(scene){
+  const firstLine=scene&&Array.isArray(scene.lines)?scene.lines[0]:null;
+  if(!firstLine){
+    setCinematicShot((scene&&scene.video)||"control","");
+    return;
+  }
+
+  const firstShot=firstLine.shot||(/mara/i.test(firstLine.speaker||"")?"mara":"leit");
+  setCinematicShot(firstShot,firstLine.speaker);
+  $("cineSpeaker").textContent=firstLine.speaker||"";
+  $("cineRole").textContent=firstLine.role||"";
+  $("cineAvatar").textContent=(firstLine.speaker||"?").trim().charAt(0).toUpperCase();
+  $("cineSubline").textContent="";
+  finalSetHumanAvatar(firstLine.speaker||"");
+  finalRenderTranscript(firstLine.text||"");
+}
+
+/*
+ * Die erste Dialogperson wird vollständig vorbereitet, solange das Modal noch
+ * unsichtbar ist. So kann weder der alte Sprecher noch der Leitstellen-
+ * Standardzustand für einen Frame aufblitzen, wenn Mara eine Szene eröffnet.
+ */
+playCinematic=function(scene,onDone){
+  const modal=$("cinematicModal");
+  if(!modal){
+    if(onDone)onDone();
+    return;
+  }
+
+  modal.classList.remove("show");
+  cineRunToken++;
+  cineLineToken=0;
+  cineSpeechRun++;
+  cineScene=scene;
+  cineIndex=0;
+  cineResolve=onDone||(()=>{});
+  cineActive=true;
+
+  $("cinematicKicker").textContent=scene.kicker||"Zwischensequenz";
+  $("cinematicTitleText").textContent=scene.title||"Kommunikationskanal aktiv";
+  $("cineProgress").style.width="0%";
+  primeCinematicFirstFrame(scene);
+
+  modal.classList.add("show");
+  document.body.style.overflow="hidden";
+  duckMusic(true);
+  advanceCinematicLine();
+};
+
 function realisticCharacterBeat(speaker){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const now=performance.now();
